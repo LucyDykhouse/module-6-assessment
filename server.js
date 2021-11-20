@@ -18,6 +18,7 @@ app.get("/styles", (req, res) => {
   });
 
 app.get("/js", (req, res) => {
+    rollbar.info('Index.js file served successfully')
     res.sendFile(path.join(__dirname, "public/index.js"));
 });
 
