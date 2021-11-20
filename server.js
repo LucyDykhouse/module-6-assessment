@@ -3,6 +3,12 @@ const path = require('path');
 const app = express();
 const {bots, playerRecord} = require('./data');
 const {shuffleArray} = require('./utils');
+var Rollbar = require("rollbar");
+var rollbar = new Rollbar({
+    accessToken: '337464f032bd4171b94b4dc9aa583c9f',
+    captureUncaught: true,
+    captureUnhandledRejections: true
+});
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -20,6 +26,7 @@ app.get('/api/robots', (req, res) => {
         res.status(200).send(botsArr)
     } catch (error) {
         console.log('ERROR GETTING BOTS', error)
+        rollbar.error('There was an error retrieving the bots')
         res.sendStatus(400)
     }
 })
@@ -29,9 +36,11 @@ app.get('/api/robots/five', (req, res) => {
         let shuffled = shuffleArray(bots)
         let choices = shuffled.slice(0, 5)
         let compDuo = shuffled.slice(6, 8)
+        rollbar.info('Five robot choices displayed to user')
         res.status(200).send({choices, compDuo})
     } catch (error) {
         console.log('ERROR GETTING FIVE BOTS', error)
+        rollbar.error('There was an error retrieving the bot choices for the user')
         res.sendStatus(400)
     }
 })
@@ -56,22 +65,27 @@ app.post('/api/duel', (req, res) => {
         // comparing the total health to determine a winner
         if (compHealthAfterAttack > playerHealthAfterAttack) {
             playerRecord.losses++
+            rollbar.info('Duel successful. The user lost')
             res.status(200).send('You lost!')
         } else {
             playerRecord.losses++
+            rollbar.info('Duel successful. The user won')
             res.status(200).send('You won!')
         }
     } catch (error) {
         console.log('ERROR DUELING', error)
+        rollbar.error('There was an error playing the duel')
         res.sendStatus(400)
     }
 })
 
 app.get('/api/player', (req, res) => {
     try {
+        rollbar.info('User\'s record updated')
         res.status(200).send(playerRecord)
     } catch (error) {
         console.log('ERROR GETTING PLAYER STATS', error)
+        rollbar.error('There was an error updating the user\'s record')
         res.sendStatus(400)
     }
 })
